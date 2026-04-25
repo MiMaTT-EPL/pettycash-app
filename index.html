@@ -1,1 +1,2027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Petty Cash App</title>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    :root {
+      --navy: #07163a;
+      --navy-2: #0f265f;
+      --bg: #f3f4f6;
+      --panel: #ffffff;
+      --border: #e5e7eb;
+      --muted: #6b7280;
+      --text: #111827;
+      --green: #16a34a;
+      --green-soft: #dcfce7;
+      --green-text: #166534;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --red-text: #991b1b;
+      --orange: #ea580c;
+      --orange-soft: #ffedd5;
+      --orange-text: #9a3412;
+      --purple-soft: #eef2ff;
+      --purple-text: #3730a3;
+      --gray-soft: #f3f4f6;
+      --gray-text: #374151;
+      --teal-soft: #ccfbf1;
+      --teal-text: #0f766e;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+      --radius: 16px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .desktop-only {
+      display: none !important;
+    }
+
+    .mobile-only {
+      display: block;
+    }
+
+    .login-shell {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border);
+    }
+
+    .login-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+
+    .login-subtext {
+      color: var(--muted);
+      margin-bottom: 20px;
+      line-height: 1.45;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: block;
+    }
+
+    .sidebar {
+      display: none;
+    }
+
+    .mobile-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: var(--navy);
+      color: white;
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .mobile-topbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .mobile-brand {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .mobile-page-label {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.75);
+      margin-top: 4px;
+    }
+
+    .logout-btn-top {
+      border: none;
+      background: rgba(255, 255, 255, 0.12);
+      color: white;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .mobile-bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 35;
+      background: white;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      padding-bottom: var(--safe-bottom);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .mobile-nav-btn {
+      border: none;
+      background: transparent;
+      padding: 12px 8px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .mobile-nav-btn.active {
+      color: var(--navy);
+      background: #f8fafc;
+    }
+
+    .content {
+      padding: 16px 16px calc(92px + var(--safe-bottom));
+      max-width: 100%;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .subtext {
+      color: var(--muted);
+      margin-bottom: 18px;
+      line-height: 1.4;
+      font-size: 14px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+
+    .panel-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .stats,
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-title,
+    .kpi-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .stat-value,
+    .kpi-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1.1;
+    }
+
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.35;
+    }
+
+    .kpi-highlight {
+      border: 2px solid #bbf7d0;
+      background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+    }
+
+    .grid-2,
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .full {
+      grid-column: auto;
+    }
+
+    .toolbar,
+    .dashboard-filter-group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+      align-items: stretch;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font-size: 16px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      padding: 13px 14px;
+      outline: none;
+      background: white;
+      color: var(--text);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.25);
+    }
+
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    .search-input,
+    .filter-select {
+      min-width: 0;
+      max-width: none;
+      width: 100%;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 13px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      white-space: nowrap;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: var(--purple-soft);
+      color: var(--purple-text);
+    }
+
+    .btn-warning {
+      background: var(--orange);
+      color: white;
+    }
+
+    .btn-danger {
+      background: var(--red);
+      color: white;
+      opacity: 0.95;
+    }
+
+    .small-btn {
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .table-wrap {
+      display: none;
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    tbody tr:hover {
+      background: #f9fafb;
+    }
+
+    th {
+      background: #f9fafb;
+      font-weight: 700;
+    }
+
+    .mobile-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .mobile-item {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: white;
+      padding: 14px;
+    }
+
+    .mobile-item-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .mobile-item-title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .mobile-item-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    .mobile-fields {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .mobile-field {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      border-bottom: 1px solid #f8fafc;
+      padding-bottom: 6px;
+    }
+
+    .mobile-field:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .mobile-field-label {
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 92px;
+      flex-shrink: 0;
+    }
+
+    .mobile-field-value {
+      font-size: 13px;
+      color: var(--text);
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .mobile-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .message {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .message.success {
+      background: var(--green-soft);
+      color: var(--green-text);
+      border: 1px solid #bbf7d0;
+    }
+
+    .message.error {
+      background: var(--red-soft);
+      color: var(--red-text);
+      border: 1px solid #fecaca;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      display: inline-block;
+      margin-bottom: 6px;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .positive {
+      color: var(--green-text) !important;
+    }
+
+    .negative {
+      color: #b91c1c !important;
+    }
+
+    .dashboard-topbar {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .dashboard-summary-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--purple-soft);
+      color: var(--purple-text);
+    }
+
+    .badge-success {
+      background: var(--green-soft);
+      color: var(--green-text);
+    }
+
+    .badge-gray {
+      background: var(--gray-soft);
+      color: var(--gray-text);
+    }
+
+    .empty-state {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (min-width: 700px) {
+      .stats,
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .toolbar,
+      .dashboard-filter-group {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .mobile-only {
+        display: none !important;
+      }
+
+      .desktop-only {
+        display: block !important;
+      }
+
+      .app {
+        display: flex;
+      }
+
+      .sidebar {
+        display: flex;
+        width: 220px;
+        background: var(--navy);
+        color: white;
+        padding: 28px 0;
+        flex-direction: column;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+      }
+
+      .sidebar-top {
+        width: 100%;
+      }
+
+      .sidebar-bottom {
+        padding: 0 24px;
+      }
+
+      .brand {
+        font-size: 22px;
+        font-weight: 700;
+        padding: 0 24px 28px;
+      }
+
+      .nav-btn {
+        display: block;
+        width: 100%;
+        border: none;
+        background: transparent;
+        color: white;
+        text-align: left;
+        padding: 16px 24px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      .nav-btn.active,
+      .nav-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .logout-btn {
+        width: 100%;
+        border: none;
+        background: var(--red);
+        color: white;
+        text-align: center;
+        padding: 12px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 700;
+        border-radius: 12px;
+      }
+
+      .content {
+        flex: 1;
+        padding: 28px;
+        max-width: none;
+      }
+
+      h1 {
+        font-size: 28px;
+        margin-bottom: 8px;
+      }
+
+      .subtext {
+        margin-bottom: 24px;
+        font-size: 15px;
+      }
+
+      .stats,
+      .kpi-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 22px;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 20px;
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .full {
+        grid-column: 1 / -1;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .search-input {
+        flex: 1;
+        min-width: 240px;
+      }
+
+      .filter-select {
+        min-width: 170px;
+        max-width: 200px;
+      }
+
+      .btn {
+        width: auto;
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        font-size: 14px;
+      }
+
+      .table-wrap {
+        display: block;
+      }
+
+      .desktop-table {
+        display: block;
+      }
+
+      .mobile-list {
+        display: none;
+      }
+
+      .dashboard-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+      }
+
+      .dashboard-filter-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .dashboard-filter-group select {
+        min-width: 150px;
+        max-width: 180px;
+      }
+
+      .form-group label.muted {
+        color: #374151;
+        font-weight: 700;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loginScreen" class="login-shell">
+    <div class="login-card">
+      <div class="login-title">Petty Cash</div>
+      <div class="login-subtext">Sign in with the email and password created in Supabase Auth.</div>
+
+      <div class="form-group">
+        <label class="muted">Email</label>
+        <input id="loginEmail" type="email" autocomplete="username" />
+      </div>
+
+      <div class="form-group">
+        <label class="muted">Password</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" />
+      </div>
+
+      <button class="btn btn-primary" id="loginBtn" type="button" style="width:100%;">Log In</button>
+
+      <div id="loginMessage" class="message"></div>
+    </div>
+  </div>
+
+  <div id="appShell" class="app hidden">
+    <div class="mobile-topbar mobile-only">
+      <div class="mobile-topbar-row">
+        <div>
+          <div class="mobile-brand">Petty Cash</div>
+          <div class="mobile-page-label" id="mobilePageLabel">Expenses</div>
+        </div>
+        <button id="logoutBtnMobile" class="logout-btn-top" type="button">Logout</button>
+      </div>
+    </div>
+
+    <aside class="sidebar desktop-only">
+      <div class="sidebar-top">
+        <div class="brand">Petty Cash</div>
+        <button class="nav-btn active" data-page="expensesPage" type="button">Expenses</button>
+        <button class="nav-btn" data-page="incomePage" type="button">Income</button>
+        <button class="nav-btn" data-page="dashboardPage" type="button">Dashboard</button>
+      </div>
+
+      <div class="sidebar-bottom">
+        <button id="logoutBtn" class="logout-btn" type="button">Logout</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section id="expensesPage" class="page active">
+        <h1>Expenses</h1>
+        <p class="subtext">Record daily petty cash expenses, especially groceries.</p>
+
+        <div class="stats">
+          <div class="card">
+            <div class="stat-title">Total Expenses</div>
+            <div class="stat-value" id="expensesTotalStat">0</div>
+          </div>
+          <div class="card">
+            <div class="stat-title">Total Amount</div>
+            <div class="stat-value" id="expensesAmountStat">0.00</div>
+          </div>
+          <div class="card kpi-highlight">
+            <div class="stat-title">Groceries Spend</div>
+            <div class="stat-value" id="expensesGroceriesStat">0.00</div>
+          </div>
+          <div class="card">
+            <div class="stat-title">This Month</div>
+            <div class="stat-value" id="expensesMonthStat">0.00</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="panel-title">Expense List</div>
+
+            <div class="toolbar">
+              <input id="expenseSearch" class="search-input" type="text" placeholder="Search category, shop, description, notes" autocomplete="off" />
+              <select id="expenseCategoryFilter" class="filter-select">
+                <option value="">All Categories</option>
+                <option value="Groceries">Groceries</option>
+                <option value="Transport">Transport</option>
+                <option value="Household">Household</option>
+                <option value="Food">Food</option>
+                <option value="Medical">Medical</option>
+                <option value="School">School</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Misc">Misc</option>
+              </select>
+              <button class="btn btn-secondary" id="expenseClearSearchBtn" type="button">Clear</button>
+            </div>
+
+            <div class="table-wrap desktop-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Shop Name</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Notes</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="expensesTableBody"></tbody>
+              </table>
+            </div>
+
+            <div id="expensesMobileList" class="mobile-list mobile-only"></div>
+            <div id="expenseListMessage" class="message"></div>
+          </div>
+
+          <div class="card">
+            <div class="panel-title" id="expenseFormTitle">Add Expense</div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="muted">Date</label>
+                <input id="expenseDate" type="date" />
+              </div>
+
+              <div class="form-group">
+                <label class="muted">Category</label>
+                <select id="expenseCategory">
+                  <option value="Groceries">Groceries</option>
+                  <option value="Transport">Transport</option>
+                  <option value="Household">Household</option>
+                  <option value="Food">Food</option>
+                  <option value="Medical">Medical</option>
+                  <option value="School">School</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Misc">Misc</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="muted">Shop Name</label>
+                <input id="expenseShopName" type="text" autocomplete="off" />
+              </div>
+
+              <div class="form-group">
+                <label class="muted">Amount</label>
+                <input id="expenseAmount" type="number" step="0.01" />
+              </div>
+
+              <div class="form-group full">
+                <label class="muted">Description</label>
+                <textarea id="expenseDescription" autocomplete="off"></textarea>
+              </div>
+
+              <div class="form-group full">
+                <label class="muted">Notes</label>
+                <textarea id="expenseNotes" autocomplete="off"></textarea>
+              </div>
+            </div>
+
+            <div class="toolbar">
+              <button class="btn btn-primary" id="saveExpenseBtn" type="button">Save Expense</button>
+              <button class="btn btn-warning hidden" id="updateExpenseBtn" type="button">Update Expense</button>
+              <button class="btn btn-secondary" id="clearExpenseBtn" type="button">Clear</button>
+            </div>
+
+            <div id="expenseMessage" class="message"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="incomePage" class="page">
+        <h1>Income</h1>
+        <p class="subtext">Record petty cash top-ups and inflows.</p>
+
+        <div class="stats">
+          <div class="card">
+            <div class="stat-title">Total Income Records</div>
+            <div class="stat-value" id="incomeTotalStat">0</div>
+          </div>
+          <div class="card">
+            <div class="stat-title">Total Income</div>
+            <div class="stat-value" id="incomeAmountStat">0.00</div>
+          </div>
+          <div class="card">
+            <div class="stat-title">This Month</div>
+            <div class="stat-value" id="incomeMonthStat">0.00</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="panel-title">Income List</div>
+
+            <div class="toolbar">
+              <input id="incomeSearch" class="search-input" type="text" placeholder="Search source, description, notes" autocomplete="off" />
+              <button class="btn btn-secondary" id="incomeClearSearchBtn" type="button">Clear</button>
+            </div>
+
+            <div class="table-wrap desktop-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Source</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Notes</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="incomeTableBody"></tbody>
+              </table>
+            </div>
+
+            <div id="incomeMobileList" class="mobile-list mobile-only"></div>
+            <div id="incomeListMessage" class="message"></div>
+          </div>
+
+          <div class="card">
+            <div class="panel-title" id="incomeFormTitle">Add Income</div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="muted">Date</label>
+                <input id="incomeDate" type="date" />
+              </div>
+
+              <div class="form-group">
+                <label class="muted">Source</label>
+                <input id="incomeSource" type="text" autocomplete="off" />
+              </div>
+
+              <div class="form-group">
+                <label class="muted">Amount</label>
+                <input id="incomeAmount" type="number" step="0.01" />
+              </div>
+
+              <div class="form-group full">
+                <label class="muted">Description</label>
+                <textarea id="incomeDescription" autocomplete="off"></textarea>
+              </div>
+
+              <div class="form-group full">
+                <label class="muted">Notes</label>
+                <textarea id="incomeNotes" autocomplete="off"></textarea>
+              </div>
+            </div>
+
+            <div class="toolbar">
+              <button class="btn btn-primary" id="saveIncomeBtn" type="button">Save Income</button>
+              <button class="btn btn-warning hidden" id="updateIncomeBtn" type="button">Update Income</button>
+              <button class="btn btn-secondary" id="clearIncomeBtn" type="button">Clear</button>
+            </div>
+
+            <div id="incomeMessage" class="message"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="dashboardPage" class="page">
+        <h1>Dashboard</h1>
+        <p class="subtext">Petty cash summary with monthly and YTD view.</p>
+
+        <div class="dashboard-topbar">
+          <div class="dashboard-filter-group">
+            <select id="dashboardMode">
+              <option value="month">Monthly</option>
+              <option value="ytd">YTD</option>
+            </select>
+            <select id="dashboardYearFilter"></select>
+            <select id="dashboardMonthFilter">
+              <option value="">All Months</option>
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+          </div>
+
+          <div class="dashboard-summary-note" id="dashboardPeriodLabel">Showing current period.</div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="card">
+            <div class="kpi-label">Total Income</div>
+            <div class="kpi-number" id="dashTotalIncome">0.00</div>
+            <div class="kpi-sub">Cash top-ups and inflows</div>
+          </div>
+
+          <div class="card">
+            <div class="kpi-label">Total Expenses</div>
+            <div class="kpi-number" id="dashTotalExpenses">0.00</div>
+            <div class="kpi-sub">All petty cash spending</div>
+          </div>
+
+          <div class="card kpi-highlight">
+            <div class="kpi-label">Current Petty Cash Balance</div>
+            <div class="kpi-number" id="dashPettyCashBalance">0.00</div>
+            <div class="kpi-sub">Income - Expenses</div>
+          </div>
+
+          <div class="card kpi-highlight">
+            <div class="kpi-label">Groceries Spend</div>
+            <div class="kpi-number" id="dashGroceriesSpend">0.00</div>
+            <div class="kpi-sub">Expenses with category Groceries</div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="panel-title">Recent Expenses</div>
+
+            <div class="table-wrap desktop-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Shop</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboardRecentExpensesBody"></tbody>
+              </table>
+            </div>
+
+            <div id="dashboardRecentExpensesMobileList" class="mobile-list mobile-only"></div>
+          </div>
+
+          <div class="card">
+            <div class="panel-title">Recent Income</div>
+
+            <div class="table-wrap desktop-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Source</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboardRecentIncomeBody"></tbody>
+              </table>
+            </div>
+
+            <div id="dashboardRecentIncomeMobileList" class="mobile-list mobile-only"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="mobile-bottom-nav mobile-only">
+      <button class="mobile-nav-btn active" data-page="expensesPage" type="button">Expenses</button>
+      <button class="mobile-nav-btn" data-page="incomePage" type="button">Income</button>
+      <button class="mobile-nav-btn" data-page="dashboardPage" type="button">Dashboard</button>
+    </nav>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL_HERE";
+    const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const MONTH_NAMES = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    let expenses = [];
+    let incomes = [];
+    let editingExpenseId = null;
+    let editingIncomeId = null;
+
+    function showMessage(elementId, text, type = "success") {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      el.textContent = text;
+      el.className = "message show " + type;
+    }
+
+    function clearMessage(elementId) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      el.textContent = "";
+      el.className = "message";
+    }
+
+    function showLoginScreen() {
+      document.getElementById("loginScreen").classList.remove("hidden");
+      document.getElementById("appShell").classList.add("hidden");
+    }
+
+    function showAppShell() {
+      document.getElementById("loginScreen").classList.add("hidden");
+      document.getElementById("appShell").classList.remove("hidden");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function todayInputDate() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+
+    function formatMoney(value) {
+      const num = Number(value || 0);
+      return Number.isFinite(num)
+        ? num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : "0.00";
+    }
+
+    function monthLabel(monthNumber) {
+      const monthIndex = Number(monthNumber) - 1;
+      return MONTH_NAMES[monthIndex] || "";
+    }
+
+    function parseDateParts(dateString) {
+      if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return null;
+      const [year, month, day] = dateString.split("-").map(Number);
+      return { year, month, day };
+    }
+
+    function isInPeriod(dateString, yearFilter, monthFilter) {
+      const parts = parseDateParts(dateString);
+      if (!parts) return false;
+      if (yearFilter && parts.year !== Number(yearFilter)) return false;
+      if (monthFilter && parts.month !== Number(monthFilter)) return false;
+      return true;
+    }
+
+    function getDashboardMode() {
+      const modeEl = document.getElementById("dashboardMode");
+      return modeEl ? modeEl.value : "month";
+    }
+
+    function getDashboardFilters() {
+      return {
+        year: document.getElementById("dashboardYearFilter").value,
+        month: document.getElementById("dashboardMonthFilter").value
+      };
+    }
+
+    function filterRowsByDashboardMode(rows, dateField) {
+      const { year, month } = getDashboardFilters();
+      const mode = getDashboardMode();
+
+      if (mode === "ytd") {
+        return rows.filter((row) => {
+          const parts = parseDateParts(row[dateField]);
+          return parts && parts.year === Number(year);
+        });
+      }
+
+      return rows.filter((row) => isInPeriod(row[dateField], year, month));
+    }
+
+    function periodLabelText() {
+      const { year, month } = getDashboardFilters();
+      const mode = getDashboardMode();
+
+      if (!year) return mode === "ytd" ? "Showing YTD." : "Showing all data.";
+      if (mode === "ytd") return `Showing YTD ${year}.`;
+      if (!month) return `Showing ${year} (all months).`;
+      return `Showing ${monthLabel(month)} ${year}.`;
+    }
+
+    function getAllAvailableYears() {
+      const years = new Set();
+
+      expenses.forEach((row) => {
+        const parts = parseDateParts(row.expense_date);
+        if (parts) years.add(parts.year);
+      });
+
+      incomes.forEach((row) => {
+        const parts = parseDateParts(row.income_date);
+        if (parts) years.add(parts.year);
+      });
+
+      years.add(new Date().getFullYear());
+
+      return Array.from(years).sort((a, b) => b - a);
+    }
+
+    function populateDashboardYearFilter() {
+      const yearSelect = document.getElementById("dashboardYearFilter");
+      const previousValue = yearSelect.value;
+      const years = getAllAvailableYears();
+      const currentYear = String(new Date().getFullYear());
+
+      yearSelect.innerHTML = years
+        .map((year) => `<option value="${year}">${year}</option>`)
+        .join("");
+
+      if (years.includes(Number(previousValue))) {
+        yearSelect.value = previousValue;
+      } else if (years.includes(Number(currentYear))) {
+        yearSelect.value = currentYear;
+      } else if (years.length) {
+        yearSelect.value = String(years[0]);
+      }
+    }
+
+    function setMobileList(elementId, html, emptyText) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      el.innerHTML = html || `<div class="mobile-item"><div class="empty-state">${escapeHtml(emptyText)}</div></div>`;
+    }
+
+    function updatePageLabel(pageId) {
+      const labels = {
+        expensesPage: "Expenses",
+        incomePage: "Income",
+        dashboardPage: "Dashboard"
+      };
+      const el = document.getElementById("mobilePageLabel");
+      if (el) el.textContent = labels[pageId] || "Petty Cash";
+    }
+
+    async function handleLogin() {
+      clearMessage("loginMessage");
+
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+
+      if (!email || !password) {
+        showMessage("loginMessage", "Email and password are required.", "error");
+        return;
+      }
+
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        showMessage("loginMessage", error.message, "error");
+        return;
+      }
+
+      document.getElementById("loginPassword").value = "";
+      showAppShell();
+      await initApp();
+    }
+
+    async function handleLogout() {
+      const { error } = await supabaseClient.auth.signOut();
+
+      if (error) {
+        showMessage("expenseListMessage", "Logout failed.\n" + error.message, "error");
+        return;
+      }
+
+      expenses = [];
+      incomes = [];
+      editingExpenseId = null;
+      editingIncomeId = null;
+
+      showLoginScreen();
+    }
+
+    async function checkAuthOnLoad() {
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error || !data?.session) {
+        showLoginScreen();
+        return;
+      }
+
+      showAppShell();
+      await initApp();
+    }
+
+    async function loadExpenses(showSuccessMessage = false) {
+      clearMessage("expenseListMessage");
+
+      const { data, error } = await supabaseClient
+        .from("petty_expenses")
+        .select("*")
+        .order("expense_date", { ascending: false });
+
+      if (error) {
+        expenses = [];
+        renderExpenses();
+        renderDashboard();
+        showMessage("expenseListMessage", "Could not load expenses.\n" + error.message, "error");
+        return false;
+      }
+
+      expenses = Array.isArray(data) ? data : [];
+
+      renderExpenses();
+      populateDashboardYearFilter();
+      renderDashboard();
+
+      if (showSuccessMessage) {
+        showMessage("expenseListMessage", "Expenses refreshed.", "success");
+      }
+
+      return true;
+    }
+
+    function renderExpenses() {
+      const searchValue = document.getElementById("expenseSearch").value.trim().toLowerCase();
+      const categoryFilter = document.getElementById("expenseCategoryFilter").value;
+
+      const filtered = expenses.filter((row) => {
+        const haystack = [
+          row.expense_date,
+          row.category,
+          row.shop_name,
+          row.description,
+          row.amount,
+          row.notes
+        ].join(" ").toLowerCase();
+
+        return haystack.includes(searchValue) && (!categoryFilter || row.category === categoryFilter);
+      });
+
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+
+      document.getElementById("expensesTotalStat").textContent = expenses.length;
+      document.getElementById("expensesAmountStat").textContent = formatMoney(
+        expenses.reduce((sum, row) => sum + Number(row.amount || 0), 0)
+      );
+      document.getElementById("expensesGroceriesStat").textContent = formatMoney(
+        expenses
+          .filter((row) => String(row.category || "").toLowerCase() === "groceries")
+          .reduce((sum, row) => sum + Number(row.amount || 0), 0)
+      );
+      document.getElementById("expensesMonthStat").textContent = formatMoney(
+        expenses
+          .filter((row) => isInPeriod(row.expense_date, currentYear, currentMonth))
+          .reduce((sum, row) => sum + Number(row.amount || 0), 0)
+      );
+
+      const tbody = document.getElementById("expensesTableBody");
+
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="8">No expenses found.</td></tr>`;
+        setMobileList("expensesMobileList", "", "No expenses found.");
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((row, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHtml(row.expense_date || "")}</td>
+          <td><span class="badge ${String(row.category || "").toLowerCase() === "groceries" ? "badge-success" : "badge-gray"}">${escapeHtml(row.category || "")}</span></td>
+          <td>${escapeHtml(row.shop_name || "")}</td>
+          <td>${escapeHtml(row.description || "")}</td>
+          <td>${escapeHtml(formatMoney(row.amount))}</td>
+          <td>${escapeHtml(row.notes || "")}</td>
+          <td>
+            <div class="action-row">
+              <button class="small-btn btn-warning" type="button" onclick="editExpense('${row.id}')">Edit</button>
+              <button class="small-btn btn-danger" type="button" onclick="deleteExpense('${row.id}')">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+
+      setMobileList(
+        "expensesMobileList",
+        filtered.map((row) => `
+          <div class="mobile-item">
+            <div class="mobile-item-head">
+              <div>
+                <div class="mobile-item-title">${escapeHtml(row.shop_name || row.category || "Expense")}</div>
+                <div class="mobile-item-subtitle">${escapeHtml(row.expense_date || "")}</div>
+              </div>
+              <span class="badge ${String(row.category || "").toLowerCase() === "groceries" ? "badge-success" : "badge-gray"}">${escapeHtml(row.category || "")}</span>
+            </div>
+
+            <div class="mobile-fields">
+              <div class="mobile-field">
+                <div class="mobile-field-label">Amount</div>
+                <div class="mobile-field-value">${escapeHtml(formatMoney(row.amount))}</div>
+              </div>
+              <div class="mobile-field">
+                <div class="mobile-field-label">Description</div>
+                <div class="mobile-field-value">${escapeHtml(row.description || "-")}</div>
+              </div>
+              <div class="mobile-field">
+                <div class="mobile-field-label">Notes</div>
+                <div class="mobile-field-value">${escapeHtml(row.notes || "-")}</div>
+              </div>
+            </div>
+
+            <div class="mobile-actions">
+              <button class="small-btn btn-warning" type="button" onclick="editExpense('${row.id}')">Edit</button>
+              <button class="small-btn btn-danger" type="button" onclick="deleteExpense('${row.id}')">Delete</button>
+            </div>
+          </div>
+        `).join(""),
+        "No expenses found."
+      );
+    }
+
+    function setExpenseFormMode(mode) {
+      document.getElementById("expenseFormTitle").textContent = mode === "edit" ? "Edit Expense" : "Add Expense";
+      document.getElementById("saveExpenseBtn").classList.toggle("hidden", mode === "edit");
+      document.getElementById("updateExpenseBtn").classList.toggle("hidden", mode !== "edit");
+    }
+
+    function getExpensePayload() {
+      return {
+        expense_date: document.getElementById("expenseDate").value,
+        category: document.getElementById("expenseCategory").value,
+        shop_name: document.getElementById("expenseShopName").value.trim() || null,
+        description: document.getElementById("expenseDescription").value.trim() || null,
+        amount: Number(document.getElementById("expenseAmount").value || 0),
+        notes: document.getElementById("expenseNotes").value.trim() || null
+      };
+    }
+
+    function validateExpensePayload(payload) {
+      if (!payload.expense_date) return "Date is required.";
+      if (!payload.category) return "Category is required.";
+      if (!payload.amount || payload.amount <= 0) return "Amount must be greater than 0.";
+      return "";
+    }
+
+    async function saveExpense() {
+      clearMessage("expenseMessage");
+
+      const payload = getExpensePayload();
+      const validationError = validateExpensePayload(payload);
+
+      if (validationError) {
+        showMessage("expenseMessage", validationError, "error");
+        return;
+      }
+
+      const { error } = await supabaseClient.from("petty_expenses").insert([payload]);
+
+      if (error) {
+        showMessage("expenseMessage", "Could not save expense.\n" + error.message, "error");
+        return;
+      }
+
+      clearExpenseForm();
+      await loadExpenses();
+      showMessage("expenseMessage", "Expense saved successfully.", "success");
+    }
+
+    async function updateExpense() {
+      clearMessage("expenseMessage");
+
+      if (!editingExpenseId) {
+        showMessage("expenseMessage", "Select an expense using Edit first.", "error");
+        return;
+      }
+
+      const payload = getExpensePayload();
+      const validationError = validateExpensePayload(payload);
+
+      if (validationError) {
+        showMessage("expenseMessage", validationError, "error");
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from("petty_expenses")
+        .update(payload)
+        .eq("id", editingExpenseId);
+
+      if (error) {
+        showMessage("expenseMessage", "Could not update expense.\n" + error.message, "error");
+        return;
+      }
+
+      clearExpenseForm();
+      await loadExpenses();
+      showMessage("expenseMessage", "Expense updated successfully.", "success");
+    }
+
+    function editExpense(id) {
+      const found = expenses.find((row) => String(row.id) === String(id));
+
+      if (!found) {
+        showMessage("expenseMessage", "Expense not found.", "error");
+        return;
+      }
+
+      editingExpenseId = found.id;
+      document.getElementById("expenseDate").value = found.expense_date || "";
+      document.getElementById("expenseCategory").value = found.category || "Groceries";
+      document.getElementById("expenseShopName").value = found.shop_name || "";
+      document.getElementById("expenseDescription").value = found.description || "";
+      document.getElementById("expenseAmount").value = found.amount ?? "";
+      document.getElementById("expenseNotes").value = found.notes || "";
+
+      setExpenseFormMode("edit");
+      showMessage("expenseMessage", "Expense loaded for update. Change the fields, then click Update Expense.", "success");
+      activatePage("expensesPage");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function clearExpenseForm() {
+      editingExpenseId = null;
+      document.getElementById("expenseDate").value = todayInputDate();
+      document.getElementById("expenseCategory").value = "Groceries";
+      document.getElementById("expenseShopName").value = "";
+      document.getElementById("expenseDescription").value = "";
+      document.getElementById("expenseAmount").value = "";
+      document.getElementById("expenseNotes").value = "";
+      setExpenseFormMode("add");
+      clearMessage("expenseMessage");
+    }
+
+    async function deleteExpense(id) {
+      const confirmed = confirm("Delete this expense?");
+      if (!confirmed) return;
+
+      const { error } = await supabaseClient.from("petty_expenses").delete().eq("id", id);
+
+      if (error) {
+        showMessage("expenseListMessage", "Could not delete expense.\n" + error.message, "error");
+        return;
+      }
+
+      if (editingExpenseId === id) {
+        clearExpenseForm();
+      }
+
+      await loadExpenses();
+      showMessage("expenseListMessage", "Expense deleted successfully.", "success");
+    }
+
+    async function loadIncome(showSuccessMessage = false) {
+      clearMessage("incomeListMessage");
+
+      const { data, error } = await supabaseClient
+        .from("petty_income")
+        .select("*")
+        .order("income_date", { ascending: false });
+
+      if (error) {
+        incomes = [];
+        renderIncome();
+        renderDashboard();
+        showMessage("incomeListMessage", "Could not load income.\n" + error.message, "error");
+        return false;
+      }
+
+      incomes = Array.isArray(data) ? data : [];
+
+      renderIncome();
+      populateDashboardYearFilter();
+      renderDashboard();
+
+      if (showSuccessMessage) {
+        showMessage("incomeListMessage", "Income refreshed.", "success");
+      }
+
+      return true;
+    }
+
+    function renderIncome() {
+      const searchValue = document.getElementById("incomeSearch").value.trim().toLowerCase();
+
+      const filtered = incomes.filter((row) => {
+        const haystack = [
+          row.income_date,
+          row.source,
+          row.description,
+          row.amount,
+          row.notes
+        ].join(" ").toLowerCase();
+
+        return haystack.includes(searchValue);
+      });
+
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+
+      document.getElementById("incomeTotalStat").textContent = incomes.length;
+      document.getElementById("incomeAmountStat").textContent = formatMoney(
+        incomes.reduce((sum, row) => sum + Number(row.amount || 0), 0)
+      );
+      document.getElementById("incomeMonthStat").textContent = formatMoney(
+        incomes
+          .filter((row) => isInPeriod(row.income_date, currentYear, currentMonth))
+          .reduce((sum, row) => sum + Number(row.amount || 0), 0)
+      );
+
+      const tbody = document.getElementById("incomeTableBody");
+
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="7">No income found.</td></tr>`;
+        setMobileList("incomeMobileList", "", "No income found.");
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((row, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHtml(row.income_date || "")}</td>
+          <td>${escapeHtml(row.source || "")}</td>
+          <td>${escapeHtml(row.description || "")}</td>
+          <td>${escapeHtml(formatMoney(row.amount))}</td>
+          <td>${escapeHtml(row.notes || "")}</td>
+          <td>
+            <div class="action-row">
+              <button class="small-btn btn-warning" type="button" onclick="editIncome('${row.id}')">Edit</button>
+              <button class="small-btn btn-danger" type="button" onclick="deleteIncome('${row.id}')">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+
+      setMobileList(
+        "incomeMobileList",
+        filtered.map((row) => `
+          <div class="mobile-item">
+            <div class="mobile-item-head">
+              <div>
+                <div class="mobile-item-title">${escapeHtml(row.source || "Income")}</div>
+                <div class="mobile-item-subtitle">${escapeHtml(row.income_date || "")}</div>
+              </div>
+              <span class="badge badge-success">${escapeHtml(formatMoney(row.amount))}</span>
+            </div>
+
+            <div class="mobile-fields">
+              <div class="mobile-field">
+                <div class="mobile-field-label">Description</div>
+                <div class="mobile-field-value">${escapeHtml(row.description || "-")}</div>
+              </div>
+              <div class="mobile-field">
+                <div class="mobile-field-label">Notes</div>
+                <div class="mobile-field-value">${escapeHtml(row.notes || "-")}</div>
+              </div>
+            </div>
+
+            <div class="mobile-actions">
+              <button class="small-btn btn-warning" type="button" onclick="editIncome('${row.id}')">Edit</button>
+              <button class="small-btn btn-danger" type="button" onclick="deleteIncome('${row.id}')">Delete</button>
+            </div>
+          </div>
+        `).join(""),
+        "No income found."
+      );
+    }
+
+    function setIncomeFormMode(mode) {
+      document.getElementById("incomeFormTitle").textContent = mode === "edit" ? "Edit Income" : "Add Income";
+      document.getElementById("saveIncomeBtn").classList.toggle("hidden", mode === "edit");
+      document.getElementById("updateIncomeBtn").classList.toggle("hidden", mode !== "edit");
+    }
+
+    function getIncomePayload() {
+      return {
+        income_date: document.getElementById("incomeDate").value,
+        source: document.getElementById("incomeSource").value.trim(),
+        description: document.getElementById("incomeDescription").value.trim() || null,
+        amount: Number(document.getElementById("incomeAmount").value || 0),
+        notes: document.getElementById("incomeNotes").value.trim() || null
+      };
+    }
+
+    function validateIncomePayload(payload) {
+      if (!payload.income_date) return "Date is required.";
+      if (!payload.source) return "Source is required.";
+      if (!payload.amount || payload.amount <= 0) return "Amount must be greater than 0.";
+      return "";
+    }
+
+    async function saveIncome() {
+      clearMessage("incomeMessage");
+
+      const payload = getIncomePayload();
+      const validationError = validateIncomePayload(payload);
+
+      if (validationError) {
+        showMessage("incomeMessage", validationError, "error");
+        return;
+      }
+
+      const { error } = await supabaseClient.from("petty_income").insert([payload]);
+
+      if (error) {
+        showMessage("incomeMessage", "Could not save income.\n" + error.message, "error");
+        return;
+      }
+
+      clearIncomeForm();
+      await loadIncome();
+      showMessage("incomeMessage", "Income saved successfully.", "success");
+    }
+
+    async function updateIncome() {
+      clearMessage("incomeMessage");
+
+      if (!editingIncomeId) {
+        showMessage("incomeMessage", "Select income using Edit first.", "error");
+        return;
+      }
+
+      const payload = getIncomePayload();
+      const validationError = validateIncomePayload(payload);
+
+      if (validationError) {
+        showMessage("incomeMessage", validationError, "error");
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from("petty_income")
+        .update(payload)
+        .eq("id", editingIncomeId);
+
+      if (error) {
+        showMessage("incomeMessage", "Could not update income.\n" + error.message, "error");
+        return;
+      }
+
+      clearIncomeForm();
+      await loadIncome();
+      showMessage("incomeMessage", "Income updated successfully.", "success");
+    }
+
+    function editIncome(id) {
+      const found = incomes.find((row) => String(row.id) === String(id));
+
+      if (!found) {
+        showMessage("incomeMessage", "Income not found.", "error");
+        return;
+      }
+
+      editingIncomeId = found.id;
+      document.getElementById("incomeDate").value = found.income_date || "";
+      document.getElementById("incomeSource").value = found.source || "";
+      document.getElementById("incomeDescription").value = found.description || "";
+      document.getElementById("incomeAmount").value = found.amount ?? "";
+      document.getElementById("incomeNotes").value = found.notes || "";
+
+      setIncomeFormMode("edit");
+      showMessage("incomeMessage", "Income loaded for update. Change the fields, then click Update Income.", "success");
+      activatePage("incomePage");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function clearIncomeForm() {
+      editingIncomeId = null;
+      document.getElementById("incomeDate").value = todayInputDate();
+      document.getElementById("incomeSource").value = "";
+      document.getElementById("incomeDescription").value = "";
+      document.getElementById("incomeAmount").value = "";
+      document.getElementById("incomeNotes").value = "";
+      setIncomeFormMode("add");
+      clearMessage("incomeMessage");
+    }
+
+    async function deleteIncome(id) {
+      const confirmed = confirm("Delete this income?");
+      if (!confirmed) return;
+
+      const { error } = await supabaseClient.from("petty_income").delete().eq("id", id);
+
+      if (error) {
+        showMessage("incomeListMessage", "Could not delete income.\n" + error.message, "error");
+        return;
+      }
+
+      if (editingIncomeId === id) {
+        clearIncomeForm();
+      }
+
+      await loadIncome();
+      showMessage("incomeListMessage", "Income deleted successfully.", "success");
+    }
+
+    function renderDashboard() {
+      document.getElementById("dashboardPeriodLabel").textContent = periodLabelText();
+
+      const periodExpenses = filterRowsByDashboardMode(expenses, "expense_date");
+      const periodIncome = filterRowsByDashboardMode(incomes, "income_date");
+
+      const totalIncome = periodIncome.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+      const totalExpenses = periodExpenses.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+      const groceriesSpend = periodExpenses
+        .filter((row) => String(row.category || "").toLowerCase() === "groceries")
+        .reduce((sum, row) => sum + Number(row.amount || 0), 0);
+      const balance = totalIncome - totalExpenses;
+
+      document.getElementById("dashTotalIncome").textContent = formatMoney(totalIncome);
+      document.getElementById("dashTotalExpenses").textContent = formatMoney(totalExpenses);
+      document.getElementById("dashPettyCashBalance").textContent = formatMoney(balance);
+      document.getElementById("dashGroceriesSpend").textContent = formatMoney(groceriesSpend);
+
+      document.getElementById("dashPettyCashBalance").classList.remove("positive", "negative");
+      document.getElementById("dashPettyCashBalance").classList.add(balance >= 0 ? "positive" : "negative");
+
+      const recentExpenses = [...periodExpenses]
+        .sort((a, b) => String(b.expense_date || "").localeCompare(String(a.expense_date || "")))
+        .slice(0, 10);
+
+      const recentIncome = [...periodIncome]
+        .sort((a, b) => String(b.income_date || "").localeCompare(String(a.income_date || "")))
+        .slice(0, 10);
+
+      const expensesBody = document.getElementById("dashboardRecentExpensesBody");
+
+      if (!recentExpenses.length) {
+        expensesBody.innerHTML = `<tr><td colspan="5">No expenses in selected period.</td></tr>`;
+        setMobileList("dashboardRecentExpensesMobileList", "", "No expenses in selected period.");
+      } else {
+        expensesBody.innerHTML = recentExpenses.map((row, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(row.expense_date || "")}</td>
+            <td>${escapeHtml(row.category || "")}</td>
+            <td>${escapeHtml(row.shop_name || "")}</td>
+            <td>${escapeHtml(formatMoney(row.amount))}</td>
+          </tr>
+        `).join("");
+
+        setMobileList(
+          "dashboardRecentExpensesMobileList",
+          recentExpenses.map((row) => `
+            <div class="mobile-item">
+              <div class="mobile-item-head">
+                <div>
+                  <div class="mobile-item-title">${escapeHtml(row.shop_name || row.category || "Expense")}</div>
+                  <div class="mobile-item-subtitle">${escapeHtml(row.expense_date || "")}</div>
+                </div>
+                <span class="badge ${String(row.category || "").toLowerCase() === "groceries" ? "badge-success" : "badge-gray"}">${escapeHtml(row.category || "")}</span>
+              </div>
+              <div class="mobile-fields">
+                <div class="mobile-field">
+                  <div class="mobile-field-label">Amount</div>
+                  <div class="mobile-field-value">${escapeHtml(formatMoney(row.amount))}</div>
+                </div>
+              </div>
+            </div>
+          `).join(""),
+          "No expenses in selected period."
+        );
+      }
+
+      const incomeBody = document.getElementById("dashboardRecentIncomeBody");
+
+      if (!recentIncome.length) {
+        incomeBody.innerHTML = `<tr><td colspan="5">No income in selected period.</td></tr>`;
+        setMobileList("dashboardRecentIncomeMobileList", "", "No income in selected period.");
+      } else {
+        incomeBody.innerHTML = recentIncome.map((row, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(row.income_date || "")}</td>
+            <td>${escapeHtml(row.source || "")}</td>
+            <td>${escapeHtml(row.description || "")}</td>
+            <td>${escapeHtml(formatMoney(row.amount))}</td>
+          </tr>
+        `).join("");
+
+        setMobileList(
+          "dashboardRecentIncomeMobileList",
+          recentIncome.map((row) => `
+            <div class="mobile-item">
+              <div class="mobile-item-head">
+                <div>
+                  <div class="mobile-item-title">${escapeHtml(row.source || "Income")}</div>
+                  <div class="mobile-item-subtitle">${escapeHtml(row.income_date || "")}</div>
+                </div>
+                <span class="badge badge-success">${escapeHtml(formatMoney(row.amount))}</span>
+              </div>
+              <div class="mobile-fields">
+                <div class="mobile-field">
+                  <div class="mobile-field-label">Description</div>
+                  <div class="mobile-field-value">${escapeHtml(row.description || "-")}</div>
+                </div>
+              </div>
+            </div>
+          `).join(""),
+          "No income in selected period."
+        );
+      }
+    }
+
+    function activatePage(pageId) {
+      const allNavButtons = document.querySelectorAll("[data-page]");
+      const pages = document.querySelectorAll(".page");
+
+      allNavButtons.forEach((btn) => btn.classList.remove("active"));
+      pages.forEach((page) => page.classList.remove("active"));
+
+      document.querySelectorAll(`[data-page="${pageId}"]`).forEach((btn) => btn.classList.add("active"));
+      document.getElementById(pageId).classList.add("active");
+      updatePageLabel(pageId);
+
+      if (pageId === "dashboardPage") renderDashboard();
+    }
+
+    function bindNavigation() {
+      document.querySelectorAll("[data-page]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activatePage(btn.dataset.page);
+        });
+      });
+    }
+
+    function bindEvents() {
+      document.getElementById("loginBtn").addEventListener("click", handleLogin);
+      document.getElementById("logoutBtn").addEventListener("click", handleLogout);
+      document.getElementById("logoutBtnMobile").addEventListener("click", handleLogout);
+
+      document.getElementById("loginPassword").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") handleLogin();
+      });
+
+      document.getElementById("expenseSearch").addEventListener("input", renderExpenses);
+      document.getElementById("expenseCategoryFilter").addEventListener("change", renderExpenses);
+      document.getElementById("expenseClearSearchBtn").addEventListener("click", function () {
+        document.getElementById("expenseSearch").value = "";
+        document.getElementById("expenseCategoryFilter").value = "";
+        renderExpenses();
+      });
+      document.getElementById("saveExpenseBtn").addEventListener("click", saveExpense);
+      document.getElementById("updateExpenseBtn").addEventListener("click", updateExpense);
+      document.getElementById("clearExpenseBtn").addEventListener("click", clearExpenseForm);
+
+      document.getElementById("incomeSearch").addEventListener("input", renderIncome);
+      document.getElementById("incomeClearSearchBtn").addEventListener("click", function () {
+        document.getElementById("incomeSearch").value = "";
+        renderIncome();
+      });
+      document.getElementById("saveIncomeBtn").addEventListener("click", saveIncome);
+      document.getElementById("updateIncomeBtn").addEventListener("click", updateIncome);
+      document.getElementById("clearIncomeBtn").addEventListener("click", clearIncomeForm);
+
+      document.getElementById("dashboardMode").addEventListener("change", renderDashboard);
+      document.getElementById("dashboardYearFilter").addEventListener("change", renderDashboard);
+      document.getElementById("dashboardMonthFilter").addEventListener("change", renderDashboard);
+    }
+
+    async function initApp() {
+      clearExpenseForm();
+      clearIncomeForm();
+      populateDashboardYearFilter();
+      document.getElementById("dashboardMonthFilter").value = String(new Date().getMonth() + 1);
+
+      await loadExpenses();
+      await loadIncome();
+
+      activatePage("expensesPage");
+      renderDashboard();
+    }
+
+    supabaseClient.auth.onAuthStateChange(function (_event, session) {
+      if (!session) {
+        showLoginScreen();
+      }
+    });
+
+    window.editExpense = editExpense;
+    window.deleteExpense = deleteExpense;
+    window.editIncome = editIncome;
+    window.deleteIncome = deleteIncome;
+
+    bindNavigation();
+    bindEvents();
+    checkAuthOnLoad();
+  </script>
+</body>
+</html>
